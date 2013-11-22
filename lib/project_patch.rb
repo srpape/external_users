@@ -19,7 +19,7 @@ module ProjectPatch
         return result
       end
 	
-      result.sub! "#{Project.table_name}.is_public = #{connection.quoted_true} OR ", ""
+      result.sub! "#{Project.table_name}.is_public = #{connection.quoted_true}", "0"
 
     end
   end
