@@ -18,26 +18,29 @@ module UserPatch
     def allowed_to_with_external_check?(action, context, options={}, &block)
       # Call the original
       result = allowed_to_without_external_check?(action, context, options, &block)
-	
-      if !result
+ 
+      # We'll never give out permissions, only take them away.
+      # If the real function returns false, just return here.
+      # Also, we make no changes for non-external users, so just return if the user isn't one.
+      if !result || !external?
 	return result
       end
 
-      # If the context is a project, and the normal method returns true,
-      # then check if the user is external
-      if context && context.is_a?(Project)
-        # If it's a public project, make sure the user isn't an external user
-	if(context.is_public? && !external?)
-          return false;
-        end
-
-        # Get the target project's roles
-        roles = roles_for_project(context)
-        return false unless roles 
-
-        # Return true if the user is a member of the project 
-        return roles.any? {|role| role.member? }
+      # We're only changing project level permissions
+      # If we're not dealing with a project context, just return the result
+      if !context || !context.is_a?(Project)
+        return result
       end
+
+      # The user is external, and we're dealing with a project
+      # Now just return true if the user is a member of the project, false otherwise
+       
+      # Get the target project's roles
+      roles = roles_for_project(context)
+      return false unless roles 
+
+      # Return true if the user is a member of the project 
+      return roles.any? {|role| role.member? }
     end
   end
 end
